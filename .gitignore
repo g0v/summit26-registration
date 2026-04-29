@@ -1,0 +1,6 @@
+/target
+/dist
+config.toml
+.codex
+.envrc
+/.github/workflows/build_nix.yml

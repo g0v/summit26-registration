@@ -1,0 +1,8 @@
+[server]
+host = "127.0.0.1"
+port = 3000
+dist_dir = "dist"
+
+[database]
+url = "postgres://conference_user:conference_password@localhost:5432/conference_registration"
+max_connections = 5
