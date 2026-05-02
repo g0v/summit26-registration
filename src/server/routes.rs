@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use axum::{
     Json,
+    body::Bytes,
     extract::{Path, State, ws::WebSocketUpgrade},
     response::IntoResponse,
 };
@@ -9,6 +10,10 @@ use axum::{
 use crate::models::{Attendee, RegistrationUpdate};
 
 use super::{db, error::AppError, state::AppState, websocket::handle_registration_socket};
+
+pub async fn echo_body(body: Bytes) -> Bytes {
+    body
+}
 
 pub async fn list_attendees(
     State(state): State<Arc<AppState>>,

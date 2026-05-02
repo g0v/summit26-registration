@@ -20,7 +20,7 @@ use tower_http::{
 use crate::models::RegistrationUpdate;
 
 use config::load_settings;
-use routes::{list_attendees, registration_socket, update_registration};
+use routes::{echo_body, list_attendees, registration_socket, update_registration};
 use state::AppState;
 
 pub async fn run() -> anyhow::Result<()> {
@@ -42,6 +42,7 @@ pub async fn run() -> anyhow::Result<()> {
     let state = AppState { db, registrations }.shared();
 
     let app = Router::new()
+        .route("/api/test", axum::routing::post(echo_body))
         .route("/api/attendees", axum::routing::get(list_attendees))
         .route(
             "/api/attendees/{ticket_id}/registration",

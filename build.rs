@@ -30,8 +30,7 @@ fn main() {
 }
 
 fn read_server_config(path: &str) -> (String, String) {
-    let content = fs::read_to_string(path)
-        .unwrap_or_default();
+    let content = fs::read_to_string(path).unwrap_or_default();
     let parsed = content.parse::<toml::Table>().unwrap_or_default();
     let server = parsed.get("server").and_then(toml::Value::as_table);
 
