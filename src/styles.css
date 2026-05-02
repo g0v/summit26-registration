@@ -1,0 +1,222 @@
+:root {
+  color: #1d2630;
+  background: #f4f6f8;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(244, 246, 248, 0.92)),
+    #f4f6f8;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.app-shell {
+  min-height: 100vh;
+  padding: 32px;
+}
+
+.topbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  max-width: 1120px;
+  margin: 0 auto 18px;
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  color: #607080;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  color: #101820;
+  font-size: clamp(28px, 5vw, 44px);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.shift-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 168px;
+  padding: 10px 12px;
+  border: 1px solid #cfd8df;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #344452;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(30, 42, 54, 0.08);
+}
+
+.shift-status.is-live .status-dot {
+  background: #1b9a59;
+  box-shadow: 0 0 0 4px rgba(27, 154, 89, 0.14);
+}
+
+.shift-status.is-sample .status-dot {
+  background: #c77817;
+  box-shadow: 0 0 0 4px rgba(199, 120, 23, 0.14);
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.table-wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  overflow-x: auto;
+  border: 1px solid #cbd5dc;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 18px 44px rgba(24, 36, 48, 0.12);
+}
+
+table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  height: 52px;
+  padding: 0 14px;
+  border-right: 1px solid #dbe2e7;
+  border-bottom: 1px solid #dbe2e7;
+  text-align: left;
+  white-space: nowrap;
+}
+
+th:last-child,
+td:last-child {
+  border-right: 0;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: 44px;
+  background: #e8edf1;
+  color: #3f4f5d;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+tbody tr {
+  background: #ffffff;
+}
+
+tbody tr:nth-child(even) {
+  background: #f9fbfc;
+}
+
+tbody tr.is-registered {
+  background: #eef9f3;
+}
+
+.attendee-name {
+  color: #121a22;
+  font-weight: 800;
+}
+
+.ticket-id {
+  color: #44515e;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+}
+
+.ticket-type {
+  display: inline-flex;
+  align-items: center;
+  min-width: 86px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #edf1f5;
+  color: #293845;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.check-cell {
+  width: 132px;
+  text-align: center;
+}
+
+.check-control {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #aab8c4;
+  border-radius: 6px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.check-control input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #1b9a59;
+  cursor: pointer;
+}
+
+.registered-label {
+  color: #247246;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.pending-label {
+  color: #7a4b14;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    padding: 18px;
+  }
+
+  .topbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .shift-status {
+    width: 100%;
+  }
+}
