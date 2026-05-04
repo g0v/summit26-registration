@@ -20,6 +20,13 @@ impl AppError {
             message: message.into(),
         }
     }
+
+    pub fn bad_gateway(message: impl Into<String>) -> Self {
+        Self {
+            status: StatusCode::BAD_GATEWAY,
+            message: message.into(),
+        }
+    }
 }
 
 impl From<sqlx::Error> for AppError {
@@ -29,6 +36,13 @@ impl From<sqlx::Error> for AppError {
             status: StatusCode::INTERNAL_SERVER_ERROR,
             message: "database error".to_string(),
         }
+    }
+}
+
+impl From<reqwest::Error> for AppError {
+    fn from(error: reqwest::Error) -> Self {
+        tracing::error!(?error, "verifier api request failed");
+        Self::bad_gateway("verifier api request failed")
     }
 }
 

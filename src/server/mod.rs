@@ -1,6 +1,7 @@
 mod config;
 mod db;
 mod error;
+mod rest_client;
 mod routes;
 mod state;
 mod websocket;
@@ -20,7 +21,10 @@ use tower_http::{
 use crate::models::RegistrationUpdate;
 
 use config::load_settings;
-use routes::{echo_body, list_attendees, registration_socket, update_registration};
+use rest_client::VerifierApiClient;
+use routes::{
+    echo_body, get_vp_deeplink, list_attendees, registration_socket, update_registration,
+};
 use state::AppState;
 
 pub async fn run() -> anyhow::Result<()> {
@@ -39,10 +43,24 @@ pub async fn run() -> anyhow::Result<()> {
         .context("failed to run migrations")?;
 
     let (registrations, _) = broadcast::channel::<RegistrationUpdate>(128);
-    let state = AppState { db, registrations }.shared();
+    let verifier_api = VerifierApiClient::new(settings.verifier_api.clone());
+    let state = AppState {
+        db,
+        registrations,
+        verifier_api,
+    }
+    .shared();
 
     let app = Router::new()
         .route("/api/test", axum::routing::post(echo_body))
+        .route(
+            "/api/verifier/deeplink/vp",
+            axum::routing::get(get_vp_deeplink),
+        )
+        .route(
+            "/api/verifier/deeplink/vp/{vp_uid}",
+            axum::routing::get(get_vp_deeplink),
+        )
         .route("/api/attendees", axum::routing::get(list_attendees))
         .route(
             "/api/attendees/{ticket_id}/registration",

@@ -7,6 +7,7 @@ use serde::Deserialize;
 pub struct Settings {
     pub server: ServerSettings,
     pub database: DatabaseSettings,
+    pub verifier_api: VerifierApiSettings,
 }
 
 #[derive(Debug, Deserialize)]
@@ -20,6 +21,12 @@ pub struct ServerSettings {
 pub struct DatabaseSettings {
     pub url: String,
     pub max_connections: u32,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct VerifierApiSettings {
+    pub base_url: String,
+    pub auth_token: String,
 }
 
 pub fn load_settings() -> Result<Settings, config::ConfigError> {

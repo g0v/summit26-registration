@@ -1,6 +1,7 @@
 /target
 /dist
 config.toml
+/.vscode
 .codex
 .envrc
 /.github/workflows/build_nix.yml

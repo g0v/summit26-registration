@@ -1,3 +1,5 @@
+#[cfg(not(target_arch = "wasm32"))]
+use rand::distr::{Alphanumeric, SampleString};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -12,4 +14,66 @@ pub struct Attendee {
 pub struct RegistrationUpdate {
     pub ticket_id: String,
     pub registered: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VpDeeplinkQuery {
+    pub vp_uid: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VpDeeplinkResponse {
+    pub code: String,
+    pub message: String,
+    pub data: VpDeeplinkData,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VpDeeplinkData {
+    pub deep_link: String,
+}
+
+impl VpDeeplinkResponse {
+    pub fn fixed(deep_link: impl Into<String>) -> Self {
+        Self {
+            code: "200".to_string(),
+            message: "success".to_string(),
+            data: VpDeeplinkData {
+                deep_link: deep_link.into(),
+            },
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct QrCodeDataRequest {
+    pub reference: String,
+    pub transaction_id: String,
+    pub is_callback: String,
+}
+
+impl QrCodeDataRequest {
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn for_vp_uid(vp_uid: impl Into<String>) -> Self {
+        let vp_uid = vp_uid.into();
+        let reference_suffix = Alphanumeric.sample_string(&mut rand::rng(), 16);
+
+        Self {
+            reference: format!("{vp_uid}_{reference_suffix}"),
+            transaction_id: "summit26-vp-deeplink".to_string(),
+            is_callback: "N".to_string(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct QrCodeDataResponse {
+    pub transaction_id: String,
+    pub qrcode_image: String,
+    pub auth_uri: String,
 }

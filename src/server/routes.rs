@@ -3,16 +3,38 @@ use std::sync::Arc;
 use axum::{
     Json,
     body::Bytes,
-    extract::{Path, State, ws::WebSocketUpgrade},
+    extract::{Path, Query, State, ws::WebSocketUpgrade},
     response::IntoResponse,
 };
 
-use crate::models::{Attendee, RegistrationUpdate};
+use crate::models::{
+    Attendee, QrCodeDataRequest, RegistrationUpdate, VpDeeplinkQuery, VpDeeplinkResponse,
+};
 
 use super::{db, error::AppError, state::AppState, websocket::handle_registration_socket};
 
 pub async fn echo_body(body: Bytes) -> Bytes {
     body
+}
+
+pub async fn get_vp_deeplink(
+    State(state): State<Arc<AppState>>,
+    path: Option<Path<String>>,
+    Query(query): Query<VpDeeplinkQuery>,
+) -> Result<Json<VpDeeplinkResponse>, AppError> {
+    let vp_uid = path
+        .map(|Path(vp_uid)| vp_uid)
+        .or(query.vp_uid)
+        .filter(|vp_uid| !vp_uid.is_empty())
+        .ok_or_else(|| AppError::bad_request("vpUid is required in path or query string"))?;
+
+    //let external_request = QrCodeDataRequest::for_vp_uid(vp_uid);
+    //let _external_response = state
+    //    .verifier_api
+    //    .create_qrcode_data(&external_request)
+    //    .await?;
+
+    Ok(Json(VpDeeplinkResponse::fixed("fixed-deep-link")))
 }
 
 pub async fn list_attendees(
