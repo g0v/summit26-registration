@@ -42,7 +42,7 @@ impl VerifierApiClient {
         let mut headers = HeaderMap::new();
         let auth_token = HeaderValue::from_str(&self.auth_token)
             .map_err(|_| AppError::bad_gateway("invalid verifier api auth token"))?;
-        headers.insert("Auth-Token", auth_token);
+        headers.insert("Access-Token", auth_token);
         Ok(headers)
     }
 }
