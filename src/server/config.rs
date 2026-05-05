@@ -12,7 +12,8 @@ pub struct Settings {
 
 #[derive(Debug, Deserialize)]
 pub struct ServerSettings {
-    pub host: String,
+    #[serde(alias = "host")]
+    pub bind_host: String,
     pub port: u16,
     pub dist_dir: PathBuf,
 }

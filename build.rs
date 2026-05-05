@@ -2,8 +2,7 @@ use std::{env, fs, path::Path};
 
 fn main() {
     println!("cargo:rerun-if-env-changed=APP_CONFIG");
-    println!("cargo:rerun-if-env-changed=APP__SERVER__HOST");
-    println!("cargo:rerun-if-env-changed=APP__SERVER__PORT");
+    println!("cargo:rerun-if-env-changed=APP__FRONTEND__BACKEND_PUBLIC_URL");
     println!("cargo:rerun-if-changed=config.toml");
     println!("cargo:rerun-if-changed=config.example.toml");
 
@@ -15,35 +14,24 @@ fn main() {
         }
     });
 
-    let (mut host, mut port) = read_server_config(&config_path);
+    let mut backend_public_url = read_frontend_backend_public_url(&config_path);
 
-    if let Ok(value) = env::var("APP__SERVER__HOST") {
-        host = value;
+    if let Ok(value) = env::var("APP__FRONTEND__BACKEND_PUBLIC_URL") {
+        backend_public_url = value;
     }
 
-    if let Ok(value) = env::var("APP__SERVER__PORT") {
-        port = value;
-    }
-
-    println!("cargo:rustc-env=SUMMIT26_SERVER_HOST={host}");
-    println!("cargo:rustc-env=SUMMIT26_SERVER_PORT={port}");
+    println!("cargo:rustc-env=SUMMIT26_BACKEND_PUBLIC_URL={backend_public_url}");
 }
 
-fn read_server_config(path: &str) -> (String, String) {
+fn read_frontend_backend_public_url(path: &str) -> String {
     let content = fs::read_to_string(path).unwrap_or_default();
     let parsed = content.parse::<toml::Table>().unwrap_or_default();
-    let server = parsed.get("server").and_then(toml::Value::as_table);
+    let frontend = parsed.get("frontend").and_then(toml::Value::as_table);
 
-    let host = server
-        .and_then(|server| server.get("host"))
+    frontend
+        .and_then(|frontend| frontend.get("backend_public_url"))
         .and_then(toml::Value::as_str)
-        .unwrap_or("127.0.0.1")
-        .to_string();
-    let port = server
-        .and_then(|server| server.get("port"))
-        .and_then(toml::Value::as_integer)
-        .unwrap_or(3000)
-        .to_string();
-
-    (host, port)
+        .unwrap_or("")
+        .trim_end_matches('/')
+        .to_string()
 }

@@ -80,8 +80,8 @@ pub async fn run() -> anyhow::Result<()> {
         .layer(TraceLayer::new_for_http())
         .with_state(state);
 
-    let configured_addr = format!("{}:{}", settings.server.host, settings.server.port);
-    let listener = TcpListener::bind((settings.server.host.as_str(), settings.server.port))
+    let configured_addr = format!("{}:{}", settings.server.bind_host, settings.server.port);
+    let listener = TcpListener::bind((settings.server.bind_host.as_str(), settings.server.port))
         .await
         .with_context(|| format!("failed to bind server address {configured_addr}"))?;
     let bound_addr = listener

@@ -1,23 +1,37 @@
-pub const SERVER_HOST: &str = env!("SUMMIT26_SERVER_HOST");
-pub const SERVER_PORT: &str = env!("SUMMIT26_SERVER_PORT");
+pub const BACKEND_PUBLIC_URL: &str = env!("SUMMIT26_BACKEND_PUBLIC_URL");
 
-pub fn configured_backend_host(location: Option<&web_sys::Location>) -> String {
-    let host = if is_bind_all_host(SERVER_HOST) {
-        location
-            .and_then(|location| location.hostname().ok())
-            .filter(|hostname| !hostname.is_empty())
-            .unwrap_or_else(|| "127.0.0.1".to_string())
+pub fn api_url(path: &str) -> String {
+    if BACKEND_PUBLIC_URL.is_empty() {
+        path.to_string()
     } else {
-        SERVER_HOST.to_string()
+        format!("{BACKEND_PUBLIC_URL}{path}")
+    }
+}
+
+pub fn websocket_url(path: &str, location: Option<&web_sys::Location>) -> String {
+    if !BACKEND_PUBLIC_URL.is_empty() {
+        return format!("{}{}", websocket_base_url(BACKEND_PUBLIC_URL), path);
+    }
+
+    let Some(location) = location else {
+        return format!("ws://127.0.0.1{path}");
     };
+    let protocol = if location.protocol().ok().as_deref() == Some("https:") {
+        "wss"
+    } else {
+        "ws"
+    };
+    let host = location.host().unwrap_or_else(|_| "127.0.0.1".to_string());
 
-    format!("{host}:{SERVER_PORT}")
+    format!("{protocol}://{host}{path}")
 }
 
-pub fn is_configured_backend_port(port: &str) -> bool {
-    port == SERVER_PORT
-}
-
-fn is_bind_all_host(host: &str) -> bool {
-    matches!(host, "0.0.0.0" | "::")
+fn websocket_base_url(url: &str) -> String {
+    if let Some(rest) = url.strip_prefix("https://") {
+        format!("wss://{rest}")
+    } else if let Some(rest) = url.strip_prefix("http://") {
+        format!("ws://{rest}")
+    } else {
+        url.to_string()
+    }
 }

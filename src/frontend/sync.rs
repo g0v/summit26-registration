@@ -3,7 +3,7 @@ use leptos::prelude::*;
 use crate::models::{Attendee, RegistrationUpdate};
 
 #[cfg(target_arch = "wasm32")]
-use super::config::{configured_backend_host, is_configured_backend_port};
+use super::config::{api_url, websocket_url};
 
 #[cfg(target_arch = "wasm32")]
 pub fn start_backend_sync(
@@ -97,49 +97,6 @@ pub fn send_registration_update(_update: RegistrationUpdate) {}
 
 #[cfg(target_arch = "wasm32")]
 fn registration_ws_url() -> String {
-    let Some(window) = web_sys::window() else {
-        return format!("ws://{}/ws/registrations", configured_backend_host(None));
-    };
-    let location = window.location();
-    let protocol = if location.protocol().ok().as_deref() == Some("https:") {
-        "wss"
-    } else {
-        "ws"
-    };
-    let host = backend_host(&location);
-
-    format!("{protocol}://{host}/ws/registrations")
-}
-
-#[cfg(target_arch = "wasm32")]
-fn api_url(path: &str) -> String {
-    let Some(window) = web_sys::window() else {
-        return format!("http://{}{path}", configured_backend_host(None));
-    };
-    let location = window.location();
-    let Ok(port) = location.port() else {
-        return path.to_string();
-    };
-
-    if is_dev_frontend_port(&port) {
-        let protocol = location.protocol().unwrap_or_else(|_| "http:".to_string());
-        format!("{protocol}//{}{path}", backend_host(&location))
-    } else {
-        path.to_string()
-    }
-}
-
-#[cfg(target_arch = "wasm32")]
-fn backend_host(location: &web_sys::Location) -> String {
-    match location.port().ok() {
-        Some(port) if is_dev_frontend_port(&port) => configured_backend_host(Some(location)),
-        _ => location
-            .host()
-            .unwrap_or_else(|_| configured_backend_host(Some(location))),
-    }
-}
-
-#[cfg(target_arch = "wasm32")]
-fn is_dev_frontend_port(port: &str) -> bool {
-    !port.is_empty() && !is_configured_backend_port(port)
+    let location = web_sys::window().map(|window| window.location());
+    websocket_url("/ws/registrations", location.as_ref())
 }
