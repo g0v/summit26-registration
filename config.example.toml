@@ -6,6 +6,8 @@ dist_dir = "dist"
 [frontend]
 # Leave empty when frontend and backend are served by the same public origin.
 # Set this for split local dev, for example "http://127.0.0.1:3000".
+# Set this to a same-origin reverse-proxy prefix, for example "/ap",
+# when nginx maps that prefix to the backend.
 backend_public_url = ""
 
 [database]

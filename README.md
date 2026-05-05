@@ -146,6 +146,39 @@ cargo run --features server --bin server
 
 Open the Trunk URL. The frontend detects that it is running on a dev port and sends API/WebSocket traffic to the backend on port `3000`.
 
+## Deploy Behind Nginx
+
+For a public path such as:
+
+```sh
+https://38552170.wallet.gov.tw/registration/
+```
+
+do not proxy public traffic to `trunk serve`. `trunk serve` is a development server
+and injects `/.well-known/trunk/ws` live-reload WebSocket code. Build static files
+instead:
+
+```sh
+APP__FRONTEND__BACKEND_PUBLIC_URL=/ap trunk build --config Trunk.registration.toml
+```
+
+Serve the generated `dist/` directory at `/registration/`.
+
+Run the backend locally:
+
+```toml
+[server]
+bind_host = "127.0.0.1"
+port = 3000
+dist_dir = "dist"
+
+[frontend]
+backend_public_url = "/ap"
+```
+
+Then configure nginx to proxy `/ap/` to the backend and strip the `/ap` prefix
+before forwarding. WebSocket upgrade headers are required for `/ap/ws/registrations`.
+
 ## Notes
 
 This is not production ready. Data syncing with verification server, authentication, authorization, logs, attendee search etc. are not yet implemented.
