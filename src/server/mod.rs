@@ -23,7 +23,7 @@ use crate::models::RegistrationUpdate;
 use config::load_settings;
 use rest_client::VerifierApiClient;
 use routes::{
-    echo_body, get_vp_deeplink, list_attendees, registration_socket, update_registration,
+    get_vp_deeplink, list_attendees, registration_socket, update_registration, verifier_callback,
 };
 use state::AppState;
 
@@ -52,7 +52,10 @@ pub async fn run() -> anyhow::Result<()> {
     .shared();
 
     let app = Router::new()
-        .route("/api/test", axum::routing::post(echo_body))
+        .route(
+            "/api/verifier/callback",
+            axum::routing::post(verifier_callback),
+        )
         .route(
             "/api/verifier/deeplink/vp",
             axum::routing::get(get_vp_deeplink),

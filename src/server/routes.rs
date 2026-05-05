@@ -13,7 +13,12 @@ use crate::models::{
 
 use super::{db, error::AppError, state::AppState, websocket::handle_registration_socket};
 
-pub async fn echo_body(body: Bytes) -> Bytes {
+pub async fn verifier_callback(body: Bytes) -> Bytes {
+    match std::str::from_utf8(&body) {
+        Ok(text) => println!("{text}"),
+        Err(_) => println!("{body:?}"),
+    }
+
     body
 }
 
@@ -28,13 +33,13 @@ pub async fn get_vp_deeplink(
         .filter(|vp_uid| !vp_uid.is_empty())
         .ok_or_else(|| AppError::bad_request("vpUid is required in path or query string"))?;
 
-    //let external_request = QrCodeDataRequest::for_vp_uid(vp_uid);
-    //let _external_response = state
-    //    .verifier_api
-    //    .create_qrcode_data(&external_request)
-    //    .await?;
+    let external_request = QrCodeDataRequest::for_vp_uid(vp_uid);
+    let external_response = state
+        .verifier_api
+        .create_qrcode_data(&external_request)
+        .await?;
 
-    Ok(Json(VpDeeplinkResponse::fixed("fixed-deep-link")))
+    Ok(Json(VpDeeplinkResponse::fixed(external_response.auth_uri)))
 }
 
 pub async fn list_attendees(

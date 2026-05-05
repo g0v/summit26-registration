@@ -39,8 +39,8 @@ pub struct VpDeeplinkData {
 impl VpDeeplinkResponse {
     pub fn fixed(deep_link: impl Into<String>) -> Self {
         Self {
-            code: "200".to_string(),
-            message: "success".to_string(),
+            code: "0".to_string(),
+            message: "SUCCESS".to_string(),
             data: VpDeeplinkData {
                 deep_link: deep_link.into(),
             },
@@ -51,6 +51,7 @@ impl VpDeeplinkResponse {
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QrCodeDataRequest {
+    #[serde(rename = "ref")]
     pub reference: String,
     pub transaction_id: String,
     pub is_callback: String,
