@@ -6,8 +6,6 @@ mod routes;
 mod state;
 mod websocket;
 
-use std::net::SocketAddr;
-
 use anyhow::Context;
 use axum::Router;
 use sqlx::postgres::PgPoolOptions;
@@ -82,11 +80,14 @@ pub async fn run() -> anyhow::Result<()> {
         .layer(TraceLayer::new_for_http())
         .with_state(state);
 
-    let addr: SocketAddr = format!("{}:{}", settings.server.host, settings.server.port)
-        .parse()
-        .context("invalid server address")?;
-    let listener = TcpListener::bind(addr).await?;
-    tracing::info!("listening on http://{addr}");
+    let configured_addr = format!("{}:{}", settings.server.host, settings.server.port);
+    let listener = TcpListener::bind((settings.server.host.as_str(), settings.server.port))
+        .await
+        .with_context(|| format!("failed to bind server address {configured_addr}"))?;
+    let bound_addr = listener
+        .local_addr()
+        .context("failed to read bound server address")?;
+    tracing::info!("listening on http://{configured_addr} ({bound_addr})");
 
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
