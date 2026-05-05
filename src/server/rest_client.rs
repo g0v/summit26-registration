@@ -28,9 +28,9 @@ impl VerifierApiClient {
 
         Ok(self
             .http
-            .post(url)
+            .get(url)
             .headers(self.auth_headers()?)
-            .json(request)
+            .query(request)
             .send()
             .await?
             .error_for_status()?
