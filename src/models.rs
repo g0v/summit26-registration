@@ -19,6 +19,7 @@ pub struct RegistrationUpdate {
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct VpDeeplinkQuery {
+    #[serde(rename = "vpUid")]
     pub vp_uid: Option<String>,
 }
 
@@ -64,8 +65,8 @@ impl QrCodeDataRequest {
         let reference_suffix = Alphanumeric.sample_string(&mut rand::rng(), 16);
 
         Self {
-            reference: format!("{vp_uid}_{reference_suffix}"),
-            transaction_id: "summit26-vp-deeplink".to_string(),
+            reference: format!("{vp_uid}"),
+            transaction_id: "summit26-vp-deeplink".to_string()+&reference_suffix,
             is_callback: "N".to_string(),
         }
     }
