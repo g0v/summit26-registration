@@ -66,7 +66,7 @@ impl QrCodeDataRequest {
 
         Self {
             reference: format!("{vp_uid}"),
-            transaction_id: "summit26-vp-deeplink".to_string()+&reference_suffix,
+            transaction_id: "summit26-vp-deeplink".to_string() + &reference_suffix,
             is_callback: "N".to_string(),
         }
     }

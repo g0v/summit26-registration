@@ -140,11 +140,12 @@ Expected result:
 For development, you can also run Trunk and the backend separately:
 
 ```sh
-trunk serve --address 127.0.0.1 --port 8080
-cargo run --features server --bin server
+make serve
+make run-server
 ```
 
-Open the Trunk URL. The frontend detects that it is running on a dev port and sends API/WebSocket traffic to the backend on port `3000`.
+Open the Trunk URL. `make serve` reads `server.bind_host` and `server.port`
+from `config.toml` and points frontend API/WebSocket traffic at that backend.
 
 ## Deploy Behind Nginx
 
@@ -159,12 +160,12 @@ and injects `/.well-known/trunk/ws` live-reload WebSocket code. Build static fil
 instead:
 
 ```sh
-APP__FRONTEND__BACKEND_PUBLIC_URL=/ap trunk build --config Trunk.registration.toml
+make deploy-build
 ```
 
 Serve the generated `dist/` directory at `/registration/`.
 
-Run the backend locally:
+Set the public backend URL in `config.toml` before building the frontend:
 
 ```toml
 [server]
@@ -176,8 +177,29 @@ dist_dir = "dist"
 backend_public_url = "/ap"
 ```
 
+`make deploy-build` reads `frontend.backend_public_url` through the normal build
+configuration path; edit `config.toml` rather than the Makefile.
+
 Then configure nginx to proxy `/ap/` to the backend and strip the `/ap` prefix
 before forwarding. WebSocket upgrade headers are required for `/ap/ws/registrations`.
+
+The default `Trunk.toml` builds assets for `/registration/`, so plain `trunk build`
+also works when `config.toml` has:
+
+```toml
+[frontend]
+backend_public_url = "/ap"
+```
+
+Useful local commands:
+
+```sh
+make serve
+make run-server
+make check
+make check-server
+make check-wasm
+```
 
 ## Notes
 
