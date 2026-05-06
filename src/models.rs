@@ -65,9 +65,9 @@ impl QrCodeDataRequest {
         let reference_suffix = Alphanumeric.sample_string(&mut rand::rng(), 16);
 
         Self {
-            reference: format!("{vp_uid}"),
-            transaction_id: "summit26-vp-deeplink".to_string() + &reference_suffix,
-            is_callback: "N".to_string(),
+            reference: format!("{}", &vp_uid),
+            transaction_id: format!("{}-transaction-{}", &vp_uid, &reference_suffix),
+            is_callback: "Y".to_string(),
         }
     }
 }
