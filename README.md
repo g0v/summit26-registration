@@ -1,9 +1,9 @@
 # g0v Summit 2026 報到 Registration Dashboard
 
 This project is implemented with Leptos, a fullstack Rust framework. It's intended to be an application for g0v Summit 2026 registration desk.
-g0v Summit 2026 will issue VCs and verify attendee registration with moda's [Ditigal Wallet](https://wallet.gov.tw/zh-tw), the registration dashboard is expected to be used only when manual registration is necessary. It syncs registration data between both digital wallet verification and manual registration (not yet implemented). For now it's demo only and a large portion of the codebase is generated and modified with the help of Codex.
+g0v Summit 2026 will issue VCs and verify attendee registration with moda's [Ditigal Wallet](https://wallet.gov.tw/zh-tw), the registration dashboard is expected to be used only when manual registration is necessary. It syncs registration data between both digital wallet verification and manual registration (not yet implemented). For now it's demo only and is partially generated and modified with the help of Codex.
 
-此專案會作為 g0v Summit 2026 報到資料後臺，g0v Summit 2026 將使用數位發展部的[數位皮夾](https://wallet.gov.tw/zh-tw)作為主要報到方式，此後臺僅在非數位皮夾到或需要確認報到狀況時由工作人員操作。其會同步數位皮夾報到與人工報到的資料（未實作），避免重複報到。目前處於 Demo 狀態，目前多數程式碼由 Codex 協助產生及修改。
+此專案會作為 g0v Summit 2026 報到資料後臺，g0v Summit 2026 將使用數位發展部的[數位皮夾](https://wallet.gov.tw/zh-tw)作為主要報到方式，此後臺僅在非數位皮夾到或需要確認報到狀況時由工作人員操作。其會同步數位皮夾報到與人工報到的資料（未實作），避免重複報到。目前處於 Demo 狀態，此專案由 Codex 協助產生及修改。
 
 It shows a spreadsheet-like attendee table with name, ticket ID, ticket type, registration checkbox, and live registration status.
 
