@@ -1,6 +1,9 @@
 use leptos::prelude::*;
 
-use crate::models::{Attendee, RegistrationUpdate};
+use crate::models::{Attendee, RegistrationUpdate, Worker};
+
+#[cfg(target_arch = "wasm32")]
+use crate::models::{RegistrationEvent, RegistrationTable};
 
 #[cfg(target_arch = "wasm32")]
 use super::config::{api_url, websocket_url};
@@ -8,6 +11,7 @@ use super::config::{api_url, websocket_url};
 #[cfg(target_arch = "wasm32")]
 pub fn start_backend_sync(
     set_attendees: WriteSignal<Vec<Attendee>>,
+    set_workers: WriteSignal<Vec<Worker>>,
     set_sync_status: WriteSignal<String>,
     set_authenticated: WriteSignal<bool>,
 ) {
@@ -56,19 +60,32 @@ pub fn start_backend_sync(
             _ => set_database_loaded.set(false),
         }
 
-        open_registration_socket(set_attendees, set_websocket_open);
+        match Request::get(&api_url("/api/workers"))
+            .credentials(RequestCredentials::Include)
+            .send()
+            .await
+        {
+            Ok(response) if response.ok() => match response.json::<Vec<Worker>>().await {
+                Ok(rows) => set_workers.set(rows),
+                Err(_) => set_database_loaded.set(false),
+            },
+            _ => set_database_loaded.set(false),
+        }
+
+        open_registration_socket(set_attendees, set_workers, set_websocket_open);
     });
 }
 
 #[cfg(target_arch = "wasm32")]
 fn open_registration_socket(
     set_attendees: WriteSignal<Vec<Attendee>>,
+    set_workers: WriteSignal<Vec<Worker>>,
     set_websocket_open: WriteSignal<bool>,
 ) {
     use wasm_bindgen::{JsCast, closure::Closure};
     use web_sys::{ErrorEvent, Event, MessageEvent, WebSocket};
 
-    use super::data::apply_registration_update;
+    use super::data::{apply_attendee_registration_update, apply_worker_registration_update};
 
     let Ok(socket) = WebSocket::new(&registration_ws_url()) else {
         return;
@@ -79,8 +96,16 @@ fn open_registration_socket(
             return;
         };
 
-        if let Ok(update) = serde_json::from_str::<RegistrationUpdate>(&payload) {
-            apply_registration_update(set_attendees, &update);
+        if let Ok(event) = serde_json::from_str::<RegistrationEvent>(&payload) {
+            let update = event.update();
+            match event.table {
+                RegistrationTable::Attendees => {
+                    apply_attendee_registration_update(set_attendees, &update);
+                }
+                RegistrationTable::Workers => {
+                    apply_worker_registration_update(set_workers, &update);
+                }
+            }
         }
     });
     socket.set_onmessage(Some(onmessage.as_ref().unchecked_ref()));
@@ -102,19 +127,40 @@ fn open_registration_socket(
 #[cfg(not(target_arch = "wasm32"))]
 pub fn start_backend_sync(
     _set_attendees: WriteSignal<Vec<Attendee>>,
+    _set_workers: WriteSignal<Vec<Worker>>,
     _set_sync_status: WriteSignal<String>,
     _set_authenticated: WriteSignal<bool>,
 ) {
 }
 
 #[cfg(target_arch = "wasm32")]
-pub fn send_registration_update(update: RegistrationUpdate) {
+pub fn send_attendee_registration_update(update: RegistrationUpdate) {
+    send_registration_update("/api/attendees", update);
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn send_attendee_registration_update(_update: RegistrationUpdate) {}
+
+#[cfg(target_arch = "wasm32")]
+pub fn send_worker_registration_update(update: RegistrationUpdate) {
+    send_registration_update("/api/workers", update);
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn send_worker_registration_update(_update: RegistrationUpdate) {}
+
+#[cfg(target_arch = "wasm32")]
+fn send_registration_update(resource_path: &str, update: RegistrationUpdate) {
     use gloo_net::http::Request;
     use wasm_bindgen_futures::spawn_local;
     use web_sys::RequestCredentials;
 
+    let resource_path = resource_path.to_string();
     spawn_local(async move {
-        let url = api_url(&format!("/api/attendees/{}/registration", update.ticket_id));
+        let url = api_url(&format!(
+            "{}/{}/registration",
+            resource_path, update.ticket_id
+        ));
         let Ok(request) = Request::post(&url)
             .credentials(RequestCredentials::Include)
             .json(&update)
@@ -125,9 +171,6 @@ pub fn send_registration_update(update: RegistrationUpdate) {
         let _ = request.send().await;
     });
 }
-
-#[cfg(not(target_arch = "wasm32"))]
-pub fn send_registration_update(_update: RegistrationUpdate) {}
 
 #[cfg(target_arch = "wasm32")]
 fn registration_ws_url() -> String {

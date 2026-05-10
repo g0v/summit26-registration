@@ -9,7 +9,8 @@ use axum::{
 };
 
 use crate::models::{
-    Attendee, QrCodeDataRequest, RegistrationUpdate, VpDeeplinkQuery, VpDeeplinkResponse,
+    Attendee, QrCodeDataRequest, RegistrationEvent, RegistrationTable, RegistrationUpdate,
+    VpDeeplinkQuery, VpDeeplinkResponse, Worker,
 };
 
 use super::{db, error::AppError, state::AppState, websocket::handle_registration_socket};
@@ -53,10 +54,33 @@ pub async fn list_attendees(
     Ok(Json(db::list_attendees(&state.db).await?))
 }
 
-pub async fn update_registration(
+pub async fn list_workers(
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<Vec<Worker>>, AppError> {
+    Ok(Json(db::list_workers(&state.db).await?))
+}
+
+pub async fn update_attendee_registration(
     State(state): State<Arc<AppState>>,
     Path(ticket_id): Path<String>,
     Json(payload): Json<RegistrationUpdate>,
+) -> Result<Json<RegistrationUpdate>, AppError> {
+    update_registration(state, RegistrationTable::Attendees, ticket_id, payload).await
+}
+
+pub async fn update_worker_registration(
+    State(state): State<Arc<AppState>>,
+    Path(ticket_id): Path<String>,
+    Json(payload): Json<RegistrationUpdate>,
+) -> Result<Json<RegistrationUpdate>, AppError> {
+    update_registration(state, RegistrationTable::Workers, ticket_id, payload).await
+}
+
+async fn update_registration(
+    state: Arc<AppState>,
+    table: RegistrationTable,
+    ticket_id: String,
+    payload: RegistrationUpdate,
 ) -> Result<Json<RegistrationUpdate>, AppError> {
     if ticket_id != payload.ticket_id {
         return Err(AppError::bad_request(
@@ -64,11 +88,13 @@ pub async fn update_registration(
         ));
     }
 
-    let updated = db::update_registration(&state.db, &payload)
+    let updated = db::update_registration(table, &state.db, &payload)
         .await?
         .ok_or_else(|| AppError::not_found("attendee not found"))?;
 
-    let _ = state.registrations.send(updated.clone());
+    let _ = state
+        .registrations
+        .send(RegistrationEvent::new(table, updated.clone()));
     Ok(Json(updated))
 }
 

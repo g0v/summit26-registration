@@ -17,14 +17,14 @@ use tower_http::{
     trace::TraceLayer,
 };
 
-use crate::models::RegistrationUpdate;
+use crate::models::RegistrationEvent;
 
 use auth::{require_auth, require_https};
 use config::load_settings;
 use rest_client::VerifierApiClient;
 use routes::{
-    auth_check, get_vp_deeplink, list_attendees, registration_socket, update_registration,
-    verifier_callback,
+    auth_check, get_vp_deeplink, list_attendees, list_workers, registration_socket,
+    update_attendee_registration, update_worker_registration, verifier_callback,
 };
 use state::AppState;
 
@@ -43,7 +43,7 @@ pub async fn run() -> anyhow::Result<()> {
         .await
         .context("failed to run migrations")?;
 
-    let (registrations, _) = broadcast::channel::<RegistrationUpdate>(128);
+    let (registrations, _) = broadcast::channel::<RegistrationEvent>(128);
     let verifier_api = VerifierApiClient::new(settings.verifier_api.clone());
     let state = AppState {
         db,
@@ -58,7 +58,12 @@ pub async fn run() -> anyhow::Result<()> {
         .route("/api/attendees", axum::routing::get(list_attendees))
         .route(
             "/api/attendees/{ticket_id}/registration",
-            axum::routing::post(update_registration),
+            axum::routing::post(update_attendee_registration),
+        )
+        .route("/api/workers", axum::routing::get(list_workers))
+        .route(
+            "/api/workers/{ticket_id}/registration",
+            axum::routing::post(update_worker_registration),
         )
         .route("/ws/registrations", axum::routing::get(registration_socket))
         .fallback_service(

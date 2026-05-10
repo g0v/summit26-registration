@@ -85,6 +85,31 @@ h1 {
   border-radius: 999px;
 }
 
+.tabbar {
+  display: flex;
+  gap: 8px;
+  max-width: 1120px;
+  margin: 0 auto 12px;
+}
+
+.tab-button {
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid #b9c5ce;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #40515f;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.tab-button.is-active {
+  border-color: #1b6f9a;
+  background: #e8f4fa;
+  color: #154e6e;
+}
+
 .table-wrap {
   max-width: 1120px;
   margin: 0 auto;

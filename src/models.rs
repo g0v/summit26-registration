@@ -11,9 +11,49 @@ pub struct Attendee {
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct Worker {
+    pub nickname: String,
+    pub ticket_id: String,
+    pub team: String,
+    pub role: String,
+    pub registered: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct RegistrationUpdate {
     pub ticket_id: String,
     pub registered: bool,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RegistrationTable {
+    Attendees,
+    Workers,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct RegistrationEvent {
+    pub table: RegistrationTable,
+    pub ticket_id: String,
+    pub registered: bool,
+}
+
+impl RegistrationEvent {
+    pub fn new(table: RegistrationTable, update: RegistrationUpdate) -> Self {
+        Self {
+            table,
+            ticket_id: update.ticket_id,
+            registered: update.registered,
+        }
+    }
+
+    pub fn update(&self) -> RegistrationUpdate {
+        RegistrationUpdate {
+            ticket_id: self.ticket_id.clone(),
+            registered: self.registered,
+        }
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
