@@ -56,7 +56,7 @@ pub async fn update_registration(
         RegistrationTable::Attendees => {
             r#"
             UPDATE attendees
-            SET registered = $1, updated_at = NOW()
+            SET registered = $1
             WHERE ticket_id = $2
             RETURNING ticket_id, registered
         "#
@@ -64,7 +64,7 @@ pub async fn update_registration(
         RegistrationTable::Workers => {
             r#"
             UPDATE workers
-            SET registered = $1, updated_at = NOW()
+            SET registered = $1
             WHERE ticket_id = $2
             RETURNING ticket_id, registered
         "#
@@ -82,4 +82,23 @@ pub async fn update_registration(
                 registered: row.get("registered"),
             })
         })
+}
+
+pub async fn register_ticket_id(
+    db: &PgPool,
+    ticket_id: &str,
+) -> Result<Vec<(RegistrationTable, RegistrationUpdate)>, sqlx::Error> {
+    let update = RegistrationUpdate {
+        ticket_id: ticket_id.to_string(),
+        registered: true,
+    };
+    let mut updated = Vec::new();
+
+    for table in [RegistrationTable::Attendees, RegistrationTable::Workers] {
+        if let Some(row) = update_registration(table, db, &update).await? {
+            updated.push((table, row));
+        }
+    }
+
+    Ok(updated)
 }

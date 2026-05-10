@@ -39,6 +39,24 @@ pub struct RegistrationEvent {
     pub registered: bool,
 }
 
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VerifierCallbackRequest {
+    pub verify_result: bool,
+    pub data: Vec<VerifierCallbackData>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct VerifierCallbackData {
+    pub claims: Vec<VerifierCallbackClaim>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct VerifierCallbackClaim {
+    pub ename: String,
+    pub value: String,
+}
+
 impl RegistrationEvent {
     pub fn new(table: RegistrationTable, update: RegistrationUpdate) -> Self {
         Self {
@@ -52,6 +70,28 @@ impl RegistrationEvent {
         RegistrationUpdate {
             ticket_id: self.ticket_id.clone(),
             registered: self.registered,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CallbackResponse {
+    pub code: String,
+    pub message: String,
+}
+
+impl CallbackResponse {
+    pub fn success() -> Self {
+        Self {
+            code: "0".to_string(),
+            message: "SUCCESS".to_string(),
+        }
+    }
+    pub fn fail() -> Self {
+        Self {
+            code: "1001".to_string(),
+            message: "缺少參數或參數不合法".to_string(),
         }
     }
 }
@@ -106,7 +146,7 @@ impl QrCodeDataRequest {
 
         Self {
             reference: format!("{}", &vp_uid),
-            transaction_id: format!("{}-transaction-{}", &vp_uid, &reference_suffix),
+            transaction_id: format!("transaction-{}", &reference_suffix),
             is_callback: "Y".to_string(),
         }
     }
