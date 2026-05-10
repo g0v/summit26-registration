@@ -1,3 +1,4 @@
+mod auth;
 mod config;
 mod db;
 mod error;
@@ -7,21 +8,23 @@ mod state;
 mod websocket;
 
 use anyhow::Context;
-use axum::Router;
+use axum::{Router, middleware};
 use sqlx::postgres::PgPoolOptions;
 use tokio::{net::TcpListener, sync::broadcast};
 use tower_http::{
-    cors::{Any, CorsLayer},
+    cors::{AllowHeaders, AllowMethods, AllowOrigin, CorsLayer},
     services::ServeDir,
     trace::TraceLayer,
 };
 
 use crate::models::RegistrationUpdate;
 
+use auth::{require_auth, require_https};
 use config::load_settings;
 use rest_client::VerifierApiClient;
 use routes::{
-    get_vp_deeplink, list_attendees, registration_socket, update_registration, verifier_callback,
+    auth_check, get_vp_deeplink, list_attendees, registration_socket, update_registration,
+    verifier_callback,
 };
 use state::AppState;
 
@@ -46,8 +49,22 @@ pub async fn run() -> anyhow::Result<()> {
         db,
         registrations,
         verifier_api,
+        auth: settings.auth.clone(),
     }
     .shared();
+
+    let protected_routes = Router::new()
+        .route("/api/auth/check", axum::routing::get(auth_check))
+        .route("/api/attendees", axum::routing::get(list_attendees))
+        .route(
+            "/api/attendees/{ticket_id}/registration",
+            axum::routing::post(update_registration),
+        )
+        .route("/ws/registrations", axum::routing::get(registration_socket))
+        .fallback_service(
+            ServeDir::new(settings.server.dist_dir).append_index_html_on_directories(true),
+        )
+        .route_layer(middleware::from_fn_with_state(state.clone(), require_auth));
 
     let app = Router::new()
         .route(
@@ -62,22 +79,16 @@ pub async fn run() -> anyhow::Result<()> {
             "/api/verifier/deeplink/vp/{vp_uid}",
             axum::routing::get(get_vp_deeplink),
         )
-        .route("/api/attendees", axum::routing::get(list_attendees))
-        .route(
-            "/api/attendees/{ticket_id}/registration",
-            axum::routing::post(update_registration),
-        )
-        .route("/ws/registrations", axum::routing::get(registration_socket))
-        .fallback_service(
-            ServeDir::new(settings.server.dist_dir).append_index_html_on_directories(true),
-        )
+        .merge(protected_routes)
         .layer(
             CorsLayer::new()
-                .allow_origin(Any)
-                .allow_methods(Any)
-                .allow_headers(Any),
+                .allow_credentials(true)
+                .allow_origin(AllowOrigin::mirror_request())
+                .allow_methods(AllowMethods::mirror_request())
+                .allow_headers(AllowHeaders::mirror_request()),
         )
         .layer(TraceLayer::new_for_http())
+        .layer(middleware::from_fn_with_state(state.clone(), require_https))
         .with_state(state);
 
     let configured_addr = format!("{}:{}", settings.server.bind_host, settings.server.port);

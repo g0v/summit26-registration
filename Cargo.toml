@@ -23,6 +23,7 @@ toml = "1.1.2"
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 anyhow = "1"
 axum = { version = "0.8", features = ["ws"] }
+base64 = "0.22"
 config = "0.15"
 futures = "0.3"
 rand = "0.9.4"
@@ -37,4 +38,4 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 gloo-net = { version = "0.6", features = ["http", "json"] }
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
-web-sys = { version = "0.3", features = ["CloseEvent", "ErrorEvent", "Event", "Location", "MessageEvent", "WebSocket", "Window"] }
+web-sys = { version = "0.3", features = ["CloseEvent", "ErrorEvent", "Event", "Location", "MessageEvent", "RequestCredentials", "WebSocket", "Window"] }

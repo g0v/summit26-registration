@@ -14,7 +14,7 @@ fn main() {
         }
     });
 
-    let mut backend_public_url = read_frontend_backend_public_url(&config_path);
+    let mut backend_public_url = read_backend_public_url(&config_path);
 
     if let Ok(value) = env::var("APP__FRONTEND__BACKEND_PUBLIC_URL") {
         backend_public_url = value;
@@ -23,15 +23,53 @@ fn main() {
     println!("cargo:rustc-env=SUMMIT26_BACKEND_PUBLIC_URL={backend_public_url}");
 }
 
-fn read_frontend_backend_public_url(path: &str) -> String {
+fn read_backend_public_url(path: &str) -> String {
     let content = fs::read_to_string(path).unwrap_or_default();
     let parsed = content.parse::<toml::Table>().unwrap_or_default();
-    let frontend = parsed.get("frontend").and_then(toml::Value::as_table);
 
-    frontend
+    let configured_backend_url = parsed
+        .get("frontend")
+        .and_then(toml::Value::as_table)
         .and_then(|frontend| frontend.get("backend_public_url"))
         .and_then(toml::Value::as_str)
         .unwrap_or("")
         .trim_end_matches('/')
-        .to_string()
+        .to_string();
+
+    if !configured_backend_url.is_empty() {
+        return configured_backend_url;
+    }
+
+    if is_development(&parsed) {
+        return local_backend_url(&parsed);
+    }
+
+    String::new()
+}
+
+fn is_development(config: &toml::Table) -> bool {
+    config
+        .get("auth")
+        .and_then(toml::Value::as_table)
+        .and_then(|auth| auth.get("development"))
+        .and_then(toml::Value::as_bool)
+        .unwrap_or(false)
+}
+
+fn local_backend_url(config: &toml::Table) -> String {
+    let server = config.get("server").and_then(toml::Value::as_table);
+    let bind_host = server
+        .and_then(|server| server.get("bind_host").or_else(|| server.get("host")))
+        .and_then(toml::Value::as_str)
+        .unwrap_or("127.0.0.1");
+    let port = server
+        .and_then(|server| server.get("port"))
+        .and_then(toml::Value::as_integer)
+        .unwrap_or(3000);
+    let host = match bind_host {
+        "" | "0.0.0.0" | "::" => "127.0.0.1",
+        host => host,
+    };
+
+    format!("http://{host}:{port}")
 }

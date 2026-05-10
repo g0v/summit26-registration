@@ -6,6 +6,7 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 pub struct Settings {
     pub server: ServerSettings,
+    pub auth: AuthSettings,
     pub database: DatabaseSettings,
     pub verifier_api: VerifierApiSettings,
 }
@@ -16,6 +17,16 @@ pub struct ServerSettings {
     pub bind_host: String,
     pub port: u16,
     pub dist_dir: PathBuf,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct AuthSettings {
+    pub username: String,
+    pub password: String,
+    #[serde(default)]
+    pub development: bool,
+    #[serde(default)]
+    pub require_https: bool,
 }
 
 #[derive(Debug, Deserialize)]

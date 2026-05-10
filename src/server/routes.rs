@@ -4,6 +4,7 @@ use axum::{
     Json,
     body::Bytes,
     extract::{Path, Query, State, ws::WebSocketUpgrade},
+    http::StatusCode,
     response::IntoResponse,
 };
 
@@ -20,6 +21,10 @@ pub async fn verifier_callback(body: Bytes) -> Bytes {
     }
 
     body
+}
+
+pub async fn auth_check() -> StatusCode {
+    StatusCode::NO_CONTENT
 }
 
 pub async fn get_vp_deeplink(

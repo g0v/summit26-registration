@@ -9,13 +9,11 @@ use super::config::{api_url, websocket_url};
 pub fn start_backend_sync(
     set_attendees: WriteSignal<Vec<Attendee>>,
     set_sync_status: WriteSignal<String>,
+    set_authenticated: WriteSignal<bool>,
 ) {
     use gloo_net::http::Request;
-    use wasm_bindgen::{JsCast, closure::Closure};
     use wasm_bindgen_futures::spawn_local;
-    use web_sys::{ErrorEvent, Event, MessageEvent, WebSocket};
-
-    use super::data::apply_registration_update;
+    use web_sys::RequestCredentials;
 
     let (database_loaded, set_database_loaded) = signal(false);
     let (websocket_open, set_websocket_open) = signal(false);
@@ -23,13 +21,31 @@ pub fn start_backend_sync(
     Effect::new(
         move |_| match (database_loaded.get(), websocket_open.get()) {
             (true, true) => set_sync_status.set("Live Data".to_string()),
-            (true, false) => set_sync_status.set("Database loaded".to_string()),
-            _ => set_sync_status.set("Sample data".to_string()),
+            (true, false) => set_sync_status.set("Database Loaded".to_string()),
+            _ => set_sync_status.set("Sample Data".to_string()),
         },
     );
 
     spawn_local(async move {
-        match Request::get(&api_url("/api/attendees")).send().await {
+        match Request::get(&api_url("/api/auth/check"))
+            .credentials(RequestCredentials::Include)
+            .send()
+            .await
+        {
+            Ok(response) if response.ok() => {}
+            _ => {
+                set_authenticated.set(false);
+                set_sync_status.set("Authentication Failed, Showing Sample Data".to_string());
+                return;
+            }
+        }
+        set_authenticated.set(true);
+
+        match Request::get(&api_url("/api/attendees"))
+            .credentials(RequestCredentials::Include)
+            .send()
+            .await
+        {
             Ok(response) if response.ok() => match response.json::<Vec<Attendee>>().await {
                 Ok(rows) => {
                     set_attendees.set(rows);
@@ -39,7 +55,20 @@ pub fn start_backend_sync(
             },
             _ => set_database_loaded.set(false),
         }
+
+        open_registration_socket(set_attendees, set_websocket_open);
     });
+}
+
+#[cfg(target_arch = "wasm32")]
+fn open_registration_socket(
+    set_attendees: WriteSignal<Vec<Attendee>>,
+    set_websocket_open: WriteSignal<bool>,
+) {
+    use wasm_bindgen::{JsCast, closure::Closure};
+    use web_sys::{ErrorEvent, Event, MessageEvent, WebSocket};
+
+    use super::data::apply_registration_update;
 
     let Ok(socket) = WebSocket::new(&registration_ws_url()) else {
         return;
@@ -74,6 +103,7 @@ pub fn start_backend_sync(
 pub fn start_backend_sync(
     _set_attendees: WriteSignal<Vec<Attendee>>,
     _set_sync_status: WriteSignal<String>,
+    _set_authenticated: WriteSignal<bool>,
 ) {
 }
 
@@ -81,10 +111,14 @@ pub fn start_backend_sync(
 pub fn send_registration_update(update: RegistrationUpdate) {
     use gloo_net::http::Request;
     use wasm_bindgen_futures::spawn_local;
+    use web_sys::RequestCredentials;
 
     spawn_local(async move {
         let url = api_url(&format!("/api/attendees/{}/registration", update.ticket_id));
-        let Ok(request) = Request::post(&url).json(&update) else {
+        let Ok(request) = Request::post(&url)
+            .credentials(RequestCredentials::Include)
+            .json(&update)
+        else {
             return;
         };
 

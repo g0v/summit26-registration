@@ -146,6 +146,8 @@ make run-server
 
 Open the Trunk URL. `make serve` reads `server.bind_host` and `server.port`
 from `config.toml` and points frontend API/WebSocket traffic at that backend.
+Plain `trunk serve` also does this when `auth.development = true` and
+`frontend.backend_public_url` is empty.
 
 ## Deploy Behind Nginx
 
@@ -173,6 +175,12 @@ bind_host = "127.0.0.1"
 port = 3000
 dist_dir = "dist"
 
+[auth]
+username = "admin"
+password = "change-me"
+development = false
+require_https = true
+
 [frontend]
 backend_public_url = "/ap"
 ```
@@ -182,6 +190,34 @@ configuration path; edit `config.toml` rather than the Makefile.
 
 Then configure nginx to proxy `/ap/` to the backend and strip the `/ap` prefix
 before forwarding. WebSocket upgrade headers are required for `/ap/ws/registrations`.
+When `auth.require_https = true`, nginx must forward the original scheme:
+
+```nginx
+proxy_set_header X-Forwarded-Proto $scheme;
+```
+
+For local development, set:
+
+```toml
+[auth]
+development = true
+require_https = false
+```
+
+Basic auth is still required in development. The `development` flag only disables
+HTTPS enforcement. The server also permits non-HTTPS requests to local hosts
+(`localhost`, `127.0.0.1`, and `[::1]`) so `make serve` plus `make run-server`
+can work without TLS.
+
+The Rust server uses Basic auth for the frontend it serves, attendee APIs, and
+the registration WebSocket. The verifier deeplink endpoints and verifier callback
+remain unauthenticated so external verifier flows can call them. If you serve
+`dist/` directly from nginx, also configure Basic auth in nginx for
+`/registration/`; otherwise the static frontend can be loaded, but attendee
+API/WebSocket access will still be blocked by the Rust server.
+
+Basic auth is simple but not ideal long-term: prefer nginx/OIDC, a session cookie
+login flow with CSRF protection, or a reverse-proxy access product for production.
 
 The default `Trunk.toml` builds assets for `/registration/`, so plain `trunk build`
 also works when `config.toml` has:

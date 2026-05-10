@@ -3,6 +3,15 @@ bind_host = "127.0.0.1"
 port = 3000
 dist_dir = "dist"
 
+[auth]
+username = "admin"
+password = "change-me"
+# Set true for local development; Basic auth is still required.
+# This only disables HTTPS enforcement.
+development = true
+# Set true in production when nginx forwards HTTPS traffic and sends X-Forwarded-Proto.
+require_https = false
+
 [frontend]
 # Leave empty when frontend and backend are served by the same public origin.
 # Set this for split local dev, for example "http://127.0.0.1:3000".
