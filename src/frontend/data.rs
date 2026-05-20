@@ -14,22 +14,49 @@ pub fn attendee_by_ticket(
 
 pub fn sample_attendees() -> Vec<Attendee> {
     [
-        ("Maya Chen", "CONF-1027", "Speaker", true),
-        ("Owen Patel", "CONF-1184", "VIP", false),
-        ("Lina Morales", "CONF-1266", "General", false),
-        ("Noah Williams", "CONF-1315", "Workshop", true),
-        ("Ari Tanaka", "CONF-1442", "General", false),
-        ("Sam Rivera", "CONF-1503", "Sponsor", false),
-        ("Priya Shah", "CONF-1638", "VIP", true),
-        ("Theo Brooks", "CONF-1790", "General", false),
+        (
+            "CONF-1027",
+            Some("Speaker"),
+            Some("Vegetarian"),
+            Some(true),
+            true,
+        ),
+        ("CONF-1184", Some("VIP"), None, Some(false), false),
+        ("CONF-1266", Some("General"), Some("Vegan"), None, false),
+        (
+            "CONF-1315",
+            Some("Workshop"),
+            Some("None"),
+            Some(true),
+            true,
+        ),
+        (
+            "CONF-1442",
+            Some("General"),
+            Some("Halal"),
+            Some(false),
+            false,
+        ),
+        ("CONF-1503", Some("Sponsor"), None, Some(true), false),
+        (
+            "CONF-1638",
+            Some("VIP"),
+            Some("Vegetarian"),
+            Some(true),
+            true,
+        ),
+        ("CONF-1790", None, None, None, false),
     ]
     .into_iter()
-    .map(|(name, ticket_id, ticket_type, registered)| Attendee {
-        name: name.to_string(),
-        ticket_id: ticket_id.to_string(),
-        ticket_type: ticket_type.to_string(),
-        registered,
-    })
+    .map(
+        |(ticket_id, ticket_type, meal_preference, reception, registered)| Attendee {
+            ticket_id: ticket_id.to_string(),
+            ticket_type: ticket_type.map(str::to_string),
+            meal_preference: meal_preference.map(str::to_string),
+            reception,
+            registered,
+        },
+    )
     .collect()
 }
 

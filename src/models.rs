@@ -4,9 +4,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Attendee {
-    pub name: String,
     pub ticket_id: String,
-    pub ticket_type: String,
+    pub ticket_type: Option<String>,
+    pub meal_preference: Option<String>,
+    pub reception: Option<bool>,
     pub registered: bool,
 }
 

@@ -111,9 +111,10 @@ fn AttendeesTable(
             <table>
                 <thead>
                     <tr>
-                        <th scope="col">"Name"</th>
                         <th scope="col">"Ticket ID"</th>
                         <th scope="col">"Ticket Type"</th>
+                        <th scope="col">"Meal Preference"</th>
+                        <th scope="col">"Reception"</th>
                         <th scope="col" class="check-cell">"Registered"</th>
                         <th scope="col">"Status"</th>
                     </tr>
@@ -205,9 +206,10 @@ fn AttendeeRow(
     #[prop(into)] on_toggle: Callback<RegistrationUpdate>,
 ) -> impl IntoView {
     let row_ticket_id = ticket_id.clone();
-    let name_cell_ticket_id = ticket_id.clone();
     let ticket_cell_ticket_id = ticket_id.clone();
     let type_cell_ticket_id = ticket_id.clone();
+    let meal_cell_ticket_id = ticket_id.clone();
+    let reception_cell_ticket_id = ticket_id.clone();
     let aria_ticket_id = ticket_id.clone();
     let checked_ticket_id = ticket_id.clone();
     let change_ticket_id = ticket_id.clone();
@@ -220,22 +222,33 @@ fn AttendeeRow(
             attendee_by_ticket(attendees, &row_ticket_id)
                 .is_some_and(|attendee| attendee.registered)
         }>
-            <td class="attendee-name">
+            <td class="ticket-id">{ticket_cell_ticket_id}</td>
+            <td>
                 {move || {
-                    attendee_by_ticket(attendees, &name_cell_ticket_id)
-                        .map(|attendee| attendee.name)
+                    attendee_by_ticket(attendees, &type_cell_ticket_id)
+                        .and_then(|attendee| attendee.ticket_type)
                         .unwrap_or_default()
                 }}
             </td>
-            <td class="ticket-id">{ticket_cell_ticket_id}</td>
             <td>
-                <span class="ticket-type">
-                    {move || {
-                        attendee_by_ticket(attendees, &type_cell_ticket_id)
-                            .map(|attendee| attendee.ticket_type)
-                            .unwrap_or_default()
-                    }}
-                </span>
+                {move || {
+                    attendee_by_ticket(attendees, &meal_cell_ticket_id)
+                        .and_then(|attendee| attendee.meal_preference)
+                        .unwrap_or_default()
+                }}
+            </td>
+            <td>
+                {move || {
+                    attendee_by_ticket(attendees, &reception_cell_ticket_id)
+                        .and_then(|attendee| attendee.reception.map(|reception| {
+                            if reception {
+                                "Yes".to_string()
+                            } else {
+                                "No".to_string()
+                            }
+                        }))
+                        .unwrap_or_default()
+                }}
             </td>
             <RegistrationCells
                 ticket_id=change_ticket_id
@@ -243,7 +256,7 @@ fn AttendeeRow(
                 registered=move || attendee_by_ticket(attendees, &checked_ticket_id)
                     .is_some_and(|attendee| attendee.registered)
                 label=move || attendee_by_ticket(attendees, &label_ticket_id)
-                    .map(|attendee| attendee.name)
+                    .map(|attendee| attendee.ticket_id)
                     .unwrap_or_else(|| label_ticket_id.clone())
                 status_registered=move || attendee_by_ticket(attendees, &status_class_ticket_id)
                     .is_some_and(|attendee| attendee.registered)

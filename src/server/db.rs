@@ -5,9 +5,9 @@ use crate::models::{Attendee, RegistrationTable, RegistrationUpdate, Worker};
 pub async fn list_attendees(db: &PgPool) -> Result<Vec<Attendee>, sqlx::Error> {
     let rows = sqlx::query(
         r#"
-            SELECT name, ticket_id, ticket_type, registered
+            SELECT ticket_id, ticket_type, meal_preference, reception, registered
             FROM attendees
-            ORDER BY name
+            ORDER BY ticket_id
         "#,
     )
     .fetch_all(db)
@@ -16,9 +16,10 @@ pub async fn list_attendees(db: &PgPool) -> Result<Vec<Attendee>, sqlx::Error> {
     Ok(rows
         .into_iter()
         .map(|row| Attendee {
-            name: row.get("name"),
             ticket_id: row.get("ticket_id"),
             ticket_type: row.get("ticket_type"),
+            meal_preference: row.get("meal_preference"),
+            reception: row.get("reception"),
             registered: row.get("registered"),
         })
         .collect())

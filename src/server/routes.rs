@@ -9,8 +9,8 @@ use axum::{
 };
 
 use crate::models::{
-    Attendee, QrCodeDataRequest, RegistrationEvent, RegistrationTable, RegistrationUpdate,
-    VerifierCallbackRequest, CallbackResponse, VpDeeplinkQuery, VpDeeplinkResponse, Worker,
+    Attendee, CallbackResponse, QrCodeDataRequest, RegistrationEvent, RegistrationTable,
+    RegistrationUpdate, VerifierCallbackRequest, VpDeeplinkQuery, VpDeeplinkResponse, Worker,
 };
 
 use super::{db, error::AppError, state::AppState, websocket::handle_registration_socket};
